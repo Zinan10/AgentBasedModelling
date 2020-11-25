@@ -1,0 +1,646 @@
+;These are the global variables for the simulation.
+globals [
+lanes ;Reports the amount of lanes
+y-values ;These are the y cooridantes of the people agents
+autonomous-death-toll ;The total amount of deaths recorded by autonomous cars.
+regular-death-toll ;The total amount of deaths recorded by regular cars.
+totalDeaths ;The sum of the autonomous death toll and the regular death toll
+]
+
+;These respective breed commands creates an set of all the breeds used in the simulation, an agentset can be seen as a collection of similar items and each item is known as the breed name.
+;For example every item in the trees breed agentset is a tree.
+breed [people person]
+breed [cars car]
+breed[houses house] ;
+breed[trees tree]
+breed[lights light]
+breed[fires fire]
+cars-own [
+speed ; the current speed of the car
+top-speed ; the maximum speed of the car
+target-lane ; the desired lane of the car
+patience ; the cars current level of patience
+current-autonomy-level ; tracks the cars current level of autonomy
+autonomous? ; Boolean variable to check if the car is autonomous or not
+Law-Abiding? ; Checks if the car stops at a red light
+max-patience ;The max patience for the cars, this is 100.
+acceleration ;The rate at which cars accelerate
+deceleration ;The rate at which cars decelerate
+]
+
+
+;These are variables specific to the lights breeds are placed here.
+lights-own
+
+[
+time-passed ;Checks the amount of time elapsed as lights change periodically.
+colors-list ;The list of colors the light agent can be, red, yellow and green.
+]
+
+;Variables specific to the fire agent are placed here.
+fires-own
+
+[
+ticksPast ;This keeps track of the amount of ticks past, the fire agent dies after a certain amount of ticks.
+]
+
+
+;The setup procedure is called when the setup button is clicked.
+;The setup procedure set the shapes of all the agents, the shape of the cars lights and fires are fixed but the shape of the people trees and houses can be any one of the options listed.
+to setup
+clear-all
+set-default-shape cars "car"
+set-default-shape people one-of ["person police" "person police" "person soldier" "person construction"]
+set-default-shape houses one-of [ "house bungalow" "house ranch" "house colonial" "house efficiency" "house two story" "factory"]
+set-default-shape trees one-of ["tree" "tree pine" "plant"]
+set-default-shape lights "lights"
+set-default-shape fires "fire"
+draw-road ;This procedure draws the road
+draw-footpath ;This procedure draws the footpath
+create-pedestrians ;This proceudre creates the pedestrians and places them at the bottom right corner
+create-or-remove-cars ;This procedure creates or remove car agents.
+add-trees-and-houses ;This procedure adds trees and houses to the left and right areas of the simulation
+addLights ; This procedure places the light agent on the road
+linesAcross ;This procedure draws lines across the road
+set-autonomy-level ;This procedure sets the current autonomy level of the car
+
+;The ask command can be used for agentsets or agents, in this case it asks or rather sets the max patience, acceleration and deceleration of the cars.
+;It also sets cars to be intially all be law abiding, and then asks 2 cars from both autonomous and non-autonomous cars to not be law abiding.
+;After these 4 cars die, 25% of cars available will be randomly picked to not be law abiding
+ask cars
+[
+set max-patience 100
+set acceleration 0.0020
+set deceleration 0.02]
+ask cars [ set Law-Abiding? true ]
+ask n-of 2 cars with [autonomous? = true][set Law-Abiding? 0 ]
+ask n-of 2 cars with [autonomous? = 0][set Law-Abiding? 0 ]
+
+reset-ticks ;resets the ticks and start.
+tick
+end
+
+;The go proceudre keeps running until an end condition is reached. It also controls the flow of color change of the traffic lights and the movements of the cars and people.
+to go
+control-traffic-lights
+set-patience
+;Asks cars to move forward and choose their target lane when available to them.
+ask cars [ move-forward ]
+ask cars with [ patience <= 0 ] [ choose-new-lane ]
+ask cars with [ ycor != target-lane ] [ move-to-target-lane ]
+;After a collision the fires get removed after 60 ticks.
+ask fires[ if ticks - ticksPast > 60 [die]]
+
+obeyLights ;This procedure tells cars to stop at the traffic light when its red
+speedOnRed ;This sets the speed of the randomly selected non law abiding cars.
+walk-forward ;This procedure tells the people to move forward in an upward direction
+continue ;This procedure tells the people to move forward in a downward direction
+driveSafe ;This procedure regulates the speed of the cars in normal motion
+record-accidents ;This proceudre keeps tracks of the accidents that have occured
+update-cars ;This sets 25% of the cars available to not be law-abiding.
+
+
+  ;The end condition, if the total death toll is equal to 15 or ticks goes past 7000 or there's only 1 car available after the inital 4 to be non law abiding the simulation stops.
+
+  set totalDeaths (autonomous-death-toll  + regular-death-toll)
+
+ if (totalDeaths = 15) or (ticks > 7000) or (count cars * 0.25 < 1)
+
+ [print "The simulation has ended" stop ]
+
+tick
+end
+
+
+
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This proceudre creates the cars on the road and sets their speed to 0.5
+to create-or-remove-cars
+
+; make sure we don't have too many cars for the room we have on the road
+let road-patches patches with [ member? pycor lanes ]
+if number-of-cars > count road-patches [
+set number-of-cars count road-patches
+
+]
+
+create-cars (number-of-cars - count cars) [
+set color car-color
+move-to one-of free road-patches
+set target-lane pycor
+set heading 90
+set top-speed 0.5 + random-float 0.5
+set speed 0.5
+
+
+
+
+
+]
+end
+
+
+;This procedure sets the colour of the autonomous agents and sets their boolean variable tracker to true, indicating that they are in-fact autonomous.
+
+to set-autonomy-level
+ let changed-number number-of-cars / 2
+
+
+ ask n-of changed-number cars ;The use of n-of here was influence from this suggestion on stack overflow, linked here.
+  ;https://stackoverflow.com/questions/60636497/how-to-change-the-colour-of-random-turtles-in-netlogo
+
+ [ if autonomy-level = 0 [set color blue set current-autonomy-level 0  set autonomous? true ]
+   if autonomy-level = 1 [set color blue + 1.0 set current-autonomy-level 1 set autonomous? true]
+   if autonomy-level = 2 [set color cyan set current-autonomy-level 2 set autonomous? true]
+   if autonomy-level = 3 [set color turquoise set current-autonomy-level 3 set autonomous? true]
+   if autonomy-level = 4 [set color green  set current-autonomy-level 4 set autonomous? true]
+   if autonomy-level = 5 [set color lime   set current-autonomy-level 5 set autonomous? true ]
+
+ ]
+end
+
+to set-patience
+
+  ;This procedure sets the patience of the autonomous cars.
+
+ ask cars with [autonomous? = true]
+ [
+   if autonomy-level = 0 [set current-autonomy-level 0 set patience (30 + random 15)]
+   if autonomy-level = 1 [set current-autonomy-level 1 set patience (40 + random 15)]
+   if autonomy-level = 2 [set current-autonomy-level 2 set patience (40 + random 15)]
+   if autonomy-level = 3 [set current-autonomy-level 3 set patience (45 + random 15)]
+   if autonomy-level = 4 [set current-autonomy-level 4 set patience (65 + random 15)]
+   if autonomy-level = 5 [set current-autonomy-level 5 set patience (85 + random 15)]
+
+
+ ]
+end
+
+;This procedure creates the people on their respective positons.
+to create-pedestrians
+ set y-values (list -8 -7 -6 -5 -4)
+ create-people 5 [insert-people]
+end
+;This procedure chooses one of the multiple people shapes and sets them as that and places them at the bottom right.
+;The idea to make the people agents a breed and making the y-values into a global variable was influenced by this linked here https://stackoverflow.com/questions/60512724/netlogo-code-adding-people-on-the-same-patch
+to insert-people
+ set shape one-of ["person police" "person police" "person soldier" "person construction"]
+ let remove-index random length y-values
+ set ycor item remove-index y-values
+ set xcor 20
+ set y-values remove-item remove-index y-values
+
+end
+
+;This reports when a road patch is free, this proceudre was part of the original procedures in the Traffic 2 lanes model.
+to-report free [ road-patches ]
+let this-car self
+report road-patches with [
+not any? turtles-here with [ self != this-car ]
+]
+end
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+
+to draw-road
+ask patches [
+
+set pcolor black
+]
+ask patches
+[ if pycor <= -0 ;; patches on the right side
+[ set pcolor black ] ] ;; of the view turn green
+set lanes n-values number-of-lanes [n -> number-of-lanes - (n * 2) - 1 ]
+ask patches with [ abs pycor <= number-of-lanes ] [
+; the road itself is varying shades of grey
+set pcolor grey - 2.5 + random-float 0.25
+]
+draw-road-lines
+end
+
+
+
+;This procedure adds trees and houses to the sides of the simulation, the left side and rigbt side.
+to add-trees-and-houses
+
+ask patches with [pcolor != 19] [
+   if count neighbors with [pcolor = black] = 8 and not any? turtles in-radius 2 [
+     sprout-houses 1 [
+       set shape one-of [ "house bungalow" "house ranch" "house colonial" "house efficiency" "house two story" "factory"]
+       set size 3
+       stamp
+     ]
+   ]
+ ]
+ask patches with [pcolor != 19] [
+   if count neighbors with [pcolor = black] = 8 and not any? turtles in-radius 1[
+       sprout-trees 1 [
+         set shape one-of ["tree" "tree pine" "plant"]
+         set size 2
+         set color green
+         stamp
+       ]
+
+   ]
+ ]
+end
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This procedure simply draws lines across the road.
+to draw-road-lines
+let y (last lanes) - 1 ; start below the "lowest" lane
+while [y <= first lanes + 1 ] [
+if not member? y lanes [
+; draw lines on road patches that are not part of a lane
+ifelse abs y = number-of-lanes
+[ draw-line y yellow 0 ] ; yellow for the sides of the road
+[ draw-line y white 0.5 ] ; dashed white between lanes
+]
+set y y + 1 ; move up one patch
+]
+end
+
+to draw-line [ y line-color gap ]
+; We use a temporary turtle to draw the line:
+; - with a gap of zero, we get a continuous line;
+; - with a gap greater than zero, we get a dasshed line.
+create-turtles 1 [
+setxy (min-pxcor - 0.5) y
+hide-turtle
+set color line-color
+set heading 90
+repeat world-width [
+pen-up
+forward gap
+pen-down
+forward (1 - gap)
+]
+die
+]
+end
+
+;This procedure draws a footpath for the people
+to draw-footpath
+ask patches
+[ if pxcor >= 19 ;; patches on the far right side
+[ set pcolor grey - 1.5 ] ]
+
+end
+
+;This procedure draws lines on the road
+to linesAcross
+ ask patches with [pxcor >= 19 and pycor > -4][
+   set pcolor grey - 1.5
+   sprout 1[
+   set shape "road2"
+   set color grey - 1
+   set heading 0
+ stamp die
+ ]
+ ]
+end
+
+;This adds the traffic light to the simualtion.
+to addLights
+ ask patches with [(pycor = -4) and pxcor = 19] [
+ sprout-lights 1 [
+ set color green
+ set shape "lights"
+ set colors-list [red yellow green]
+ set time-passed 0
+ ]
+ ]
+end
+
+
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This instructs the cars to move forward
+to move-forward
+
+set heading 90
+speed-up-car ; we tentatively speed up, but might have to slow down
+let blocking-cars other cars in-cone (1 + speed) 180 with [ y-distance <= 1 ]
+let blocking-car min-one-of blocking-cars [ distance myself ]
+if blocking-car != nobody [
+; match the speed of the car ahead of you and then slow
+; down so you are driving a bit slower than that car.
+set speed [ speed ] of blocking-car
+slow-down-car
+]
+
+forward speed
+
+
+
+end
+
+
+
+
+;This proceudre tells the people to be in constant motion as they move up and down the walkpath, when they reach a certain patch they turn and continue walking till the simulation comes to an end.
+to walk-forward
+ ask one-of people
+ [ if not any? (lights with [color = green or color = yellow]) and (pxcor = 20) or (pxcor = 20 and pycor >= 3)
+   [ set heading 0
+     forward 1
+
+     rotate-left ]
+    ]
+end
+
+
+to rotate-left
+
+  ask one-of people
+ [if (pxcor = 20 and pycor = 8)
+   [lt 90 forward 1]
+   ]
+end
+
+to continue
+ask one-of people
+[if not any? (lights with [color = green or color = yellow]) and (pxcor = 19)
+   [set heading 0
+     forward -1
+     rotate-right
+      ]
+   ]
+end
+to rotate-right
+
+ ask one-of people
+
+  [if (pxcor = 19 and pycor = -8 )
+
+   [ rt 90 forward 1]
+
+
+ ]
+end
+
+
+
+
+
+
+
+;This procedure instructs cars to move when the light is green or yellow but stop when the light is red.
+to obeyLights
+
+ ask cars
+
+ [ifelse not any? (lights) with [color = red] [move-forward] [set speed 0]
+
+ ]
+
+
+end
+
+
+;This procedure gives the respective speeds of the non law abiding cars, this reduces as the autonomy level increases.
+to speedOnRed
+
+
+
+   ask cars with [Law-Abiding? = 0]
+
+ [
+
+
+
+   if (autonomous? =  0   and any?(lights) with [color = red]) [fd 1.2]
+   if (autonomy-level = 0 and (autonomous? = True) and any?(lights) with [color = red]) [fd 1.2]
+   if (autonomy-level = 1 and any?(lights) with [color = red]) [fd 0.8]
+   if (autonomy-level = 2 and any?(lights) with [color = red]) [fd 0.35]
+   if (autonomy-level = 3 and any?(lights) with [color = red]) [fd 0.3]
+   if (autonomy-level = 4 and any?(lights) with [color = red]) [fd 0.2]
+   if (autonomy-level = 5 and any?(lights) with [color = red]) [fd 0.1]
+
+
+
+   ]
+end
+
+
+;This procedure keeps track of the collisions between both sets of cars cars and people and sprouts fire on the location of the accident.
+
+to record-accidents
+
+ let collisions patches with [any? cars-here with [speed > 0 or Law-Abiding? = 0] and any? people-here] ;The first 2 lines of this procedure was influenced by the suggestion made here, linked here.
+  ;https://stackoverflow.com/questions/61164581/how-to-check-if-2-different-breeds-of-turtles-are-on-the-same-patch
+   if any? collisions
+[
+   ask collisions
+ [
+
+
+
+     set autonomous-death-toll autonomous-death-toll + count people with [any? cars-here with [autonomous? = true]]
+     set regular-death-toll regular-death-toll + count people with [any? cars-here with [autonomous? = 0]]
+
+
+     sprout-fires 1[
+       set shape "fire"
+       set size 1
+       set ticksPast ticks
+     ]
+
+     ask people-here
+     [die]
+
+     ask cars-here
+     [die]
+
+
+ ]
+
+   if count people = 0
+   [create-pedestrians]
+
+
+ ]
+
+
+end
+
+
+;This procedure updates randomly picks cars whenever there is only 1 law abiding car available to 25% of the total count of cars.
+
+to update-cars
+
+ ask cars
+ [
+  if count cars with [Law-Abiding? = 0] = 1
+
+  [ ask n-of(count cars * 0.25) cars
+
+   [set Law-Abiding? 0]
+
+ ]]
+
+
+end
+
+;This procedure controls the speed of the cars as they drive and are in contact with people. This is improved as the autonomy level increases.
+ to driveSafe
+
+ ask cars
+[
+
+    if(any? people in-cone 1 45) and any? (lights) with [color != red] and autonomous? = 0[
+
+
+ set speed 0.008
+
+   ]
+
+
+   if(any? people in-cone 1 45) and any? (lights) with [color != red] and autonomy-level = 1 and autonomous? = true [
+
+
+ set speed 0.0009
+
+   ]
+
+
+    if(any? people in-cone 2 45) and any? (lights) with [color != red] and autonomy-level = 2 and autonomous? = true[
+
+
+      set speed 0.00007
+
+   ]
+
+  if(any? people in-cone 2 45)or (any? people in-cone 2 45) and any? (lights) with [color != red] and autonomy-level = 3 and autonomous? = true[
+
+
+   set speed 0.00008
+
+   ]
+
+   if(any? people in-cone 2 45) or (any? people in-cone 2 45) and any? (lights) with [color != red] and autonomy-level = 4 and autonomous? = true[
+
+
+   set speed 0.000007
+
+   ]
+
+    if(any? people in-cone 2 45) or (any? people in-cone 2 45) and any? (lights) with [color != red] and autonomy-level = 5 and autonomous? = true[
+
+
+   set speed 0.000007
+
+   ]
+
+ ]
+end
+
+
+
+
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This procedure slows down the car
+to slow-down-car
+set speed (speed - deceleration)
+if speed < 0 [ set speed deceleration ]
+
+
+
+end
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This procedure speeds up the car
+to speed-up-car
+set speed (speed + acceleration)
+if speed > top-speed [ set speed top-speed ]
+end
+
+
+
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+to choose-new-lane
+
+
+; Choose a new lane among those with the minimum
+; distance to your current lane (i.e., your ycor).
+let other-lanes remove ycor lanes
+if not empty? other-lanes [
+let min-dist min map [ y -> abs (y - ycor) ] other-lanes
+let closest-lanes filter [ y -> abs (y - ycor) = min-dist ] other-lanes
+set target-lane one-of closest-lanes
+set patience max-patience
+  ]
+end
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This moves cars to their target lane
+to move-to-target-lane
+ set heading ifelse-value (target-lane < ycor) [ 180 ] [ 0 ]
+ let blocking-cars other cars in-cone (1 + abs (ycor - target-lane)) 180 with [ x-distance <= 1 ]
+ let blocking-car min-one-of blocking-cars [ distance myself ]
+ ifelse blocking-car = nobody [
+   forward 0.2
+   set ycor precision ycor 1 ; to avoid floating point errors
+ ] [
+   ; slow down if the car blocking us is behind, otherwise speed up
+   ifelse towards blocking-car <= 180 [ slow-down-car ] [ speed-up-car ]
+ ]
+end
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;These two procedures report the x and y coordinate of the agent in question.
+to-report x-distance
+report distancexy [ xcor ] of myself ycor
+end
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+to-report y-distance
+report distancexy xcor [ ycor ] of myself
+end
+
+
+
+
+
+;This procedure sets the time interval between the different colors of the traffic light.
+to control-traffic-lights
+
+ask lights
+  [
+  set time-passed time-passed + 1
+
+
+   let temp 0
+   if item 0 colors-list = green [set temp 105]
+   if item 0 colors-list = yellow [set temp 15]
+   if item 0 colors-list = red [set temp 75]
+
+   if time-passed = temp
+  [
+     set time-passed 0
+     set colors-list lput first colors-list colors-list
+     set colors-list remove-item 0 colors-list
+     set color first colors-list
+   ]
+ ]
+ tick
+
+
+end
+
+
+
+
+
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This procedure reports the car color
+to-report car-color
+
+report one-of [ orange red yellow ] + 1.5 + random-float 1.0
+end
+;This procedure was made available in the original traffic 2 lanes model and is being reused in this simulation.
+;This proceudre reports the number of lanes
+to-report number-of-lanes
+
+report 3
+end

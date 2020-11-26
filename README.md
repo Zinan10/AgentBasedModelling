@@ -27,6 +27,12 @@ The simulation imitates a simple road with a small passage for the pedestrians t
 
 <img src = "https://media.giphy.com/media/kPfU6tHETmNYfk3T2m/giphy.gif" width = "650px" >
 
+# Results
+
+<img src = "https://i.imgur.com/7gv2E7H.png" width ="650px" >
+Results are generated in the in-built graph builder that NetLogo has with every program built on the platform
+
+
 
 # Code Snippets
 
@@ -84,3 +90,5 @@ to set-patience
  ]
 end
 ```
+
+

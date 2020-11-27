@@ -36,7 +36,7 @@ Results are generated in the in-built graph builder that NetLogo has with every 
 
 # Code Snippets
 
-```
+```Netlogo
 These respective breed commands creates an set of all the breeds used in the simulation, an agentset can be seen as a collection of similar items and each item is known as the breed name.
 ;For example every item in the trees breed agentset is a tree.
 breed [people person]
@@ -59,7 +59,7 @@ deceleration ;The rate at which cars decelerate
 ]
 ```
 
-```
+```Netlogo
  ask n-of changed-number cars ;The use of n-of here was influence from this suggestion on stack overflow, linked here.
   ;https://stackoverflow.com/questions/60636497/how-to-change-the-colour-of-random-turtles-in-netlogo
 

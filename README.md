@@ -3,6 +3,17 @@
 This was a project I built while at University in the relatively obscure programming language NetLogo. The purpose of this project was to simulate the behaviours of 
 self driving cars in the real world in the presence of regular cars and pedestrians. As cars level of autonomy increase they behave more intelligently and avoid obstacles and pedestrians better than regular cars. The results from the simulation were also recorded and are displayed to the user.
 
+
+##### Table of Contents  
+
+- [Requirements](#requirements)  
+- [The Environment](#the-environment) 
+- [Brief Run Level 3](#brief-run-level-3)
+- [Brief Run Level 5](#brief-run-level-5)
+- [Results](#results) 
+- [Code Snippets](#code-snippets) 
+- [Additional Info And Future Work](#additional-info-and-future-work)
+
 # Requirements 
 
 - To be able to display the behaviours of self driving cars through agent based modelling
@@ -19,11 +30,12 @@ self driving cars in the real world in the presence of regular cars and pedestri
 The simulation imitates a simple road with a small passage for the pedestrians to pass along, and a taffic light that changes in intervals, as the levels of autonomy change the way the cars behave when faced with a red light change, the model tries to imitate how the self driving cars would behave if they are in a compromised position through hacking, so while a low level autonomous car would drive uncontrollably if compromised a higher level car would still behave erratically but on a lesser scale, the level of autonomy currently ramges from 0 to 5, 5 being the highest.
 
 
-# Brief run Level 3
+# Brief Run Level 3
 <img src = "https://media.giphy.com/media/lPwcUi3kNyBD5wwJt3/giphy.gif" width = "650px" >
 
 
-# Brief run Level 5
+
+# Brief Run Level 5
 
 <img src = "https://media.giphy.com/media/kPfU6tHETmNYfk3T2m/giphy.gif" width = "650px" >
 
@@ -91,7 +103,7 @@ to set-patience
 end
 ```
 
-# Additional Info/Future Work
+# Additional Info And Future Work
 
 The PDF ReadMe file uploaded contains instructions on how to download NetLogo and run he program.
 

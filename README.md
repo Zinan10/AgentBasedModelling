@@ -4,7 +4,7 @@ This was a project I built while at University in the relatively obscure program
 self driving cars in the real world in the presence of regular cars and pedestrians. As cars level of autonomy increase they behave more intelligently and avoid obstacles and pedestrians better than regular cars. The results from the simulation were also recorded and are displayed to the user.
 
 
-##### Table of Contents  
+**Table of Contents**
 
 - [Requirements](#requirements)  
 - [The Environment](#the-environment) 

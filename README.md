@@ -1,7 +1,12 @@
 # Highlighting the dangers of self driving cars through Agent-Based Modelling
+
 <img src = "https://thumbor.forbes.com/thumbor/fit-in/1200x0/filters%3Aformat%28jpg%29/https%3A%2F%2Fspecials-images.forbesimg.com%2Fimageserve%2F5f3fe895e0243aa68130748d%2F0x0.jpg" width = "650px" >
 This was a project I built while at University in the relatively obscure programming language NetLogo. The purpose of this project was to simulate the behaviours of 
 self driving cars in the real world in the presence of regular cars and pedestrians. As cars level of autonomy increase they behave more intelligently and avoid obstacles and pedestrians better than regular cars. The results from the simulation were also recorded and are displayed to the user.
+
+
+# 
+
 
 
 **Table of Contents**

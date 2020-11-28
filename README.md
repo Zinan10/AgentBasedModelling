@@ -91,4 +91,12 @@ to set-patience
 end
 ```
 
+# Additional Info/Future Work
 
+The PDF ReadMe file uploaded contains instructions on how to download NetLogo and run he program.
+
+Future plans for the project
+
+- Collect more precise information about self driivng cars
+- Add more potential factors e.g Weather chages, Fire Hazards, Pollution etc
+- Upscalling the GUI.
